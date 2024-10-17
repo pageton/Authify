@@ -1,3 +1,4 @@
+-- Table: Users
 CREATE TABLE IF NOT EXISTS Users (
     id TEXT PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
@@ -6,6 +7,7 @@ CREATE TABLE IF NOT EXISTS Users (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table: Auth
 CREATE TABLE IF NOT EXISTS Auth (
     id TEXT PRIMARY KEY,
     userId TEXT NOT NULL,
@@ -16,4 +18,5 @@ CREATE TABLE IF NOT EXISTS Auth (
     FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
 );
 
+-- Index: Auth
 CREATE INDEX idx_userId ON Auth (userId);
