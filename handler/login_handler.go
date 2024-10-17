@@ -16,7 +16,7 @@ func LoginUser(c *fiber.Ctx, queries *db.Queries) error {
 	var user models.UserModel
 
 	if err := c.BodyParser(&user); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid input"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"ok": false, "error": "invalid input"})
 	}
 
 	userDB, err := queries.GetUser(c.Context(), db.GetUserParams{
@@ -24,17 +24,17 @@ func LoginUser(c *fiber.Ctx, queries *db.Queries) error {
 	})
 
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid username or password"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"ok": false, "error": "invalid username or password"})
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(userDB.Password), []byte(user.Password))
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid username or password"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"ok": false, "error": "invalid username or password"})
 	}
 
 	token, err := services.CreateToken(userDB.ID, userDB.Username)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not create token"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": "could not create token"})
 	}
 
 	ipAddress := c.IP()
@@ -52,8 +52,8 @@ func LoginUser(c *fiber.Ctx, queries *db.Queries) error {
 	}
 
 	if err := queries.CreateAuthToken(c.Context(), authTokenParams); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not create token"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": "could not create token"})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"token": token})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"ok": true, "token": token})
 }
