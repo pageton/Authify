@@ -71,13 +71,7 @@ func main() {
 	})
 
 	app.Post("/logout", middleware.AuthMiddleware, func(c *fiber.Ctx) error {
-		userID := c.Locals("user_id").(string)
-
-		if err := queries.DeleteAuthToken(c.Context(), userID); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not log out"})
-		}
-
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Successfully logged out"})
+		return handler.LogOutUser(c, queries)
 	})
 
 	app.Get("/protected", middleware.AuthMiddleware, func(c *fiber.Ctx) error {
