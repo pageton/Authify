@@ -6,15 +6,18 @@ This is an authentication service built using Go, Fiber, and SQLite. It provides
 ## Project Structure
 
 ```
-└── 📁auth
+└── 📁authify
     └── 📁cmd
         └── main.go
     └── 📁config
         └── config.go
     └── 📁db
         └── 📁database
+            └── data.db
         └── 📁migrations
+            └── queries.sql
             └── schema.sql
+            └── sqlc.yaml
         └── 📁model
             └── db.go
             └── models.go
@@ -34,6 +37,7 @@ This is an authentication service built using Go, Fiber, and SQLite. It provides
         └── jwt_service.go
     └── .env
     └── .env.example
+    └── .gitignore
     └── go.mod
     └── go.sum
     └── README.md
@@ -45,7 +49,7 @@ This is an authentication service built using Go, Fiber, and SQLite. It provides
 
    ```bash
    git clone https://github.com/pageton/authify.git
-   cd auth
+   cd authify
    ```
 
 2. Install dependencies:
