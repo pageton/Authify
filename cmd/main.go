@@ -35,9 +35,7 @@ func main() {
 	app := fiber.New()
 
 	app.Use(middleware.CORSMiddleware)
-
 	app.Use(middleware.ErrorHandlingMiddleware)
-
 	app.Use(middleware.RequestLogger)
 
 	if err := middleware.Init(); err != nil {
@@ -47,13 +45,11 @@ func main() {
 	app.Use(middleware.RateLimitMiddleware)
 
 	cfg, err := config.LoadConfig()
-
 	if err != nil {
 		log.Fatalf("Could not load config: %v", err)
 	}
 
 	database, err := sql.Open("sqlite3", cfg.DatabasePath)
-
 	if err != nil {
 		log.Fatalf("Could not connect to the database: %v", err)
 	}
@@ -78,8 +74,22 @@ func main() {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "This is a protected route!"})
 	})
 
-	ip := getLocalIP()
+	app.Get("/", func(c *fiber.Ctx) error {
+		return handler.RedirectHandler(c)
 
+	})
+	if cfg.LoginPage {
+		app.Static("/", "./static")
+
+		app.Get("/auth/login", func(c *fiber.Ctx) error {
+			return c.SendFile("./static/index.html")
+		})
+
+		app.Get("/*", func(c *fiber.Ctx) error {
+			return handler.RedirectHandler(c)
+		})
+	}
+	ip := getLocalIP()
 	fmt.Printf("🚀 Server is running at: http://%s%s\n", ip, cfg.Port)
 	log.Fatal(app.Listen(cfg.Port))
 }
