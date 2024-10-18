@@ -3,6 +3,6 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "${DOCKER_PORT}"
     volumes:
       - ./db/database:/app/db/database
