@@ -1,0 +1,48 @@
+{
+  "name": "frontend",
+  "version": "0.0.1",
+  "devDependencies": {
+    "@playwright/test": "^1.28.1",
+    "@sveltejs/adapter-auto": "^3.0.0",
+    "@sveltejs/kit": "^2.0.0",
+    "@sveltejs/vite-plugin-svelte": "^3.0.0",
+    "autoprefixer": "^10.4.20",
+    "bits-ui": "^0.21.16",
+    "clsx": "^2.1.1",
+    "lucide-svelte": "^0.453.0",
+    "postcss": "^8.4.47",
+    "svelte": "^4.2.7",
+    "svelte-check": "^4.0.0",
+    "tailwind-merge": "^2.5.4",
+    "tailwind-variants": "^0.2.1",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.3",
+    "vitest": "^2.0.0"
+  },
+  "private": true,
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "npm run test:integration && npm run test:unit",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "test:integration": "playwright test",
+    "test:unit": "vitest",
+    "lint": "bunx biome lint --write .",
+    "format": "bunx biome format --write .",
+    "biome:check": "bunx biome check --write ."
+  },
+  "trustedDependencies": [
+    "@biomejs/biome",
+    "@sveltejs/kit",
+    "core-js",
+    "esbuild"
+  ],
+  "type": "module",
+  "dependencies": {
+    "prettier": "^3.3.3",
+    "prettier-plugin-svelte": "^3.2.7"
+  }
+}
