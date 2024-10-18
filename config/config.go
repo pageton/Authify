@@ -13,6 +13,7 @@ type Config struct {
 	SecretKey    string
 	Port         string
 	LIMIT        int
+	LoginPage    bool
 }
 
 func LoadConfig() (*Config, error) {
@@ -20,10 +21,18 @@ func LoadConfig() (*Config, error) {
 	if err != nil {
 		log.Println("Error loading .env file")
 	}
+
 	limitStr := os.Getenv("LIMIT")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
 		log.Fatalf("Invalid LIMIT value: %v", err)
+	}
+
+	loginPageStr := os.Getenv("LOGIN_PAGE")
+	loginPage, err := strconv.ParseBool(loginPageStr)
+	if err != nil {
+		log.Printf("Invalid LOGIN_PAGE value, defaulting to false: %v", err)
+		loginPage = false
 	}
 
 	return &Config{
@@ -31,5 +40,6 @@ func LoadConfig() (*Config, error) {
 		SecretKey:    os.Getenv("SECRET_KEY"),
 		Port:         os.Getenv("PORT"),
 		LIMIT:        limit,
+		LoginPage:    loginPage,
 	}, nil
 }
