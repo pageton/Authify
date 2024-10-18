@@ -35,6 +35,7 @@ func RateLimitMiddleware(c *fiber.Ctx) error {
 
 	if _, ok := rlMap.Load(ip); !ok {
 		return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+			"ok":    false,
 			"error": "Too many requests. Please try again later.",
 		})
 	}
