@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,32 +17,33 @@ func LoginUser(c *fiber.Ctx, queries *db.Queries) error {
 	var user models.UserModel
 
 	if err := c.BodyParser(&user); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"ok": false, "error": "invalid input"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"ok": false, "error": "Invalid input"})
 	}
 
-	userDB, err := queries.GetUser(c.Context(), db.GetUserParams{
-		Username: user.Username,
-	})
+	user.Username = strings.TrimSpace(user.Username)
+	user.Password = strings.TrimSpace(user.Password)
 
+	userDB, err := queries.GetUser(c.Context(), db.GetUserParams{
+		Username: strings.ToLower(user.Username),
+	})
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"ok": false, "error": "invalid username or password"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"ok": false, "error": "Invalid username or password"})
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(userDB.Password), []byte(user.Password))
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"ok": false, "error": "invalid username or password"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"ok": false, "error": "Invalid username or password"})
 	}
 
-	token, err := services.CreateToken(userDB.ID, userDB.Username)
+	token, err := services.CreateToken(userDB.ID, strings.ToLower(user.Username))
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": "could not create token"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": "Could not create token"})
 	}
 
 	ipAddress := c.IP()
 	userAgent := c.Get("User-Agent")
 
 	authID := uuid.New().String()
-
 	authTokenParams := db.CreateAuthTokenParams{
 		ID:        authID,
 		Userid:    userDB.ID,
@@ -52,8 +54,7 @@ func LoginUser(c *fiber.Ctx, queries *db.Queries) error {
 	}
 
 	if err := queries.CreateAuthToken(c.Context(), authTokenParams); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": "could not create token"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": "Could not create auth token"})
 	}
-
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"ok": true, "token": token})
 }
