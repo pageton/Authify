@@ -12,7 +12,7 @@ func ErrorHandlingMiddleware(c *fiber.Ctx) error {
 	if err != nil {
 		log.Println("An error occurred:", err)
 
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "An internal server error occurred. Please try again later."})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": "An internal server error occurred. Please try again later."})
 
 	}
 	return nil
