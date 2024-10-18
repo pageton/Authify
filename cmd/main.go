@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/mattn/go-sqlite3"
@@ -90,6 +91,6 @@ func main() {
 		})
 	}
 	ip := getLocalIP()
-	fmt.Printf("🚀 Server is running at: http://%s%s\n", ip, cfg.Port)
+	fmt.Printf("🚀 Server is running at: http://%s:%s\n", ip, strings.Split(cfg.Port, ":")[1])
 	log.Fatal(app.Listen(cfg.Port))
 }
