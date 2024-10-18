@@ -2,6 +2,7 @@ package handler
 
 import (
 	"log"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -21,10 +22,10 @@ func RegisterUser(c *fiber.Ctx, queries *db.Queries) error {
 	}
 
 	existingUser, err := queries.GetUser(c.Context(), db.GetUserParams{
-		Username: user.Username,
+		Username: strings.ToLower(user.Username),
 	})
 
-	if err == nil && existingUser.Username != "" {
+	if err == nil && strings.ToLower(existingUser.Username) != "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"ok": false, "error": "username already exists"})
 	}
 
@@ -38,7 +39,7 @@ func RegisterUser(c *fiber.Ctx, queries *db.Queries) error {
 
 	_, err = queries.CreateUser(c.Context(), db.CreateUserParams{
 		ID:       userID,
-		Username: user.Username,
+		Username: strings.ToLower(user.Username),
 		Password: string(hashedPassword),
 	})
 
@@ -50,6 +51,6 @@ func RegisterUser(c *fiber.Ctx, queries *db.Queries) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"ok":       true,
 		"id":       userID,
-		"username": user.Username,
+		"username": strings.ToLower(user.Username),
 	})
 }
