@@ -3,11 +3,11 @@ package models
 import (
 	"errors"
 
-	db "github.com/pageton/authify/db/model"
+	sqliteDB "github.com/pageton/authify/db/model/SQLite"
 )
 
 type UserModel struct {
-	*db.User
+	*sqliteDB.User
 }
 
 type Validate interface {
