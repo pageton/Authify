@@ -4,7 +4,7 @@
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { writable } from "svelte/store";
-  import { Eye, EyeClosed } from "lucide-svelte";
+  import { Eye, EyeClosed, LoaderCircle } from "lucide-svelte";
   import { goto } from "$app/navigation";
 
   type ResponseLogin = {
@@ -26,6 +26,7 @@
   let username = writable("");
   let password = writable("");
   let errorMessage = writable("");
+  let isLoading = writable(false);
 
   const setCookie = (name: string, value: string, days: number) => {
     const date = new Date();
@@ -34,7 +35,24 @@
     document.cookie = `${name}=${value}${expires}; path=/`;
   };
 
+  let form: HTMLFormElement;
+
   const handleSubmit = async (): Promise<void> => {
+    isLoading.set(true);
+
+    if (!form.reportValidity()) {
+      isLoading.set(false);
+      return;
+    }
+
+    const usernameRegex = /^[A-Za-z]+$/;
+
+    if (!usernameRegex.test($username)) {
+      errorMessage.set("Username must contain only letters.");
+      isLoading.set(false);
+      return;
+    }
+
     try {
       const body: Body = {
         username: $username,
@@ -48,18 +66,19 @@
       });
 
       const result: ResponseLogin = await response.json();
-      console.log(result);
 
       if (!response.ok || !result.ok) {
         errorMessage.set("Invalid username or password");
+        isLoading.set(false);
         return;
       }
+
       if (result.token) {
         setCookie("token", result.token, 7);
         setCookie("username", $username, 7);
+        errorMessage.set("");
+        goto("/");
       }
-      errorMessage.set("");
-      goto("/");
     } catch (err) {
       if (err instanceof Error) {
         console.error("Error during login:", err.message);
@@ -68,6 +87,9 @@
         console.error("Unexpected error", err);
         errorMessage.set("An unexpected error occurred.");
       }
+    } finally {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      isLoading.set(false);
     }
   };
 </script>
@@ -79,13 +101,14 @@
       <Card.Description>Please enter your login credentials.</Card.Description>
     </Card.Header>
     <Card.Content>
-      <form on:submit|preventDefault={handleSubmit}>
+      <form bind:this={form} on:submit|preventDefault={handleSubmit}>
         <div class="grid w-full items-center gap-4">
           <div class="flex flex-col space-y-1.5">
             <Label for="username">Username</Label>
             <Input
               id="username"
               type="text"
+              required
               placeholder="Enter your username"
               bind:value={$username}
             />
@@ -96,6 +119,7 @@
             <Input
               id="password"
               type={$showPassword ? "text" : "password"}
+              required
               placeholder="Enter your password"
               bind:value={$password}
             />
@@ -121,7 +145,20 @@
       </p>
     {/if}
     <Card.Footer class="mt-6 flex justify-center">
-      <Button on:click={handleSubmit}>Login</Button>
+      <div class="flex flex-col w-full items-center">
+        <Button
+          on:click={handleSubmit}
+          class="transition transform active:scale-95 active:bg-blue-700"
+          disabled={$isLoading}
+        >
+          {#if $isLoading}
+            <LoaderCircle class="animate-spin mr-2" />
+            Loading...
+          {:else}
+            Login
+          {/if}
+        </Button>
+      </div>
     </Card.Footer>
   </Card.Root>
 </div>
