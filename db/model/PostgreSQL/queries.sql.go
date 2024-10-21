@@ -3,29 +3,35 @@
 //   sqlc v1.27.0
 // source: queries.sql
 
-package db
+package postgresDB
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createAuthToken = `-- name: CreateAuthToken :exec
-INSERT OR REPLACE INTO Auth (id, userId, token, expiresAt, ipAddress, userAgent)
-VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO Auth (id, userId, token, expiresAt, ipAddress, userAgent)
+VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (id) DO UPDATE
+SET token = EXCLUDED.token,
+    expiresAt = EXCLUDED.expiresAt,
+    ipAddress = EXCLUDED.ipAddress,
+    userAgent = EXCLUDED.userAgent
 `
 
 type CreateAuthTokenParams struct {
-	ID        string
-	Userid    string
+	ID        pgtype.UUID
+	Userid    pgtype.UUID
 	Token     string
-	Expiresat sql.NullTime
-	Ipaddress sql.NullString
-	Useragent sql.NullString
+	Expiresat pgtype.Timestamptz
+	Ipaddress pgtype.Text
+	Useragent pgtype.Text
 }
 
 func (q *Queries) CreateAuthToken(ctx context.Context, arg CreateAuthTokenParams) error {
-	_, err := q.db.ExecContext(ctx, createAuthToken,
+	_, err := q.db.Exec(ctx, createAuthToken,
 		arg.ID,
 		arg.Userid,
 		arg.Token,
@@ -38,18 +44,18 @@ func (q *Queries) CreateAuthToken(ctx context.Context, arg CreateAuthTokenParams
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO Users (id, username, password)
-VALUES (?, ?, ?)
+VALUES ($1, $2, $3)
 RETURNING id, username, password, createdat, updatedat
 `
 
 type CreateUserParams struct {
-	ID       string
+	ID       pgtype.UUID
 	Username string
 	Password string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.ID, arg.Username, arg.Password)
+	row := q.db.QueryRow(ctx, createUser, arg.ID, arg.Username, arg.Password)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -63,27 +69,27 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 
 const deleteAuthToken = `-- name: DeleteAuthToken :exec
 DELETE FROM Auth
-WHERE id = ?
+WHERE id = $1
 `
 
-func (q *Queries) DeleteAuthToken(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, deleteAuthToken, id)
+func (q *Queries) DeleteAuthToken(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAuthToken, id)
 	return err
 }
 
 const deleteUser = `-- name: DeleteUser :exec
 DELETE FROM Users
-WHERE id = ?
-    OR username = ?
+WHERE id = $1
+    OR username = $2
 `
 
 type DeleteUserParams struct {
-	ID       string
+	ID       pgtype.UUID
 	Username string
 }
 
 func (q *Queries) DeleteUser(ctx context.Context, arg DeleteUserParams) error {
-	_, err := q.db.ExecContext(ctx, deleteUser, arg.ID, arg.Username)
+	_, err := q.db.Exec(ctx, deleteUser, arg.ID, arg.Username)
 	return err
 }
 
@@ -91,17 +97,17 @@ const getAuthToken = `-- name: GetAuthToken :one
 SELECT a.id, a.userid, a.token, a.ipaddress, a.useragent, a.expiresat
 FROM Auth a
 JOIN Users u ON a.userId = u.id
-WHERE a.id = ? OR u.username = ?
+WHERE a.id = $1 OR u.username = $2
 LIMIT 1
 `
 
 type GetAuthTokenParams struct {
-	ID       string
+	ID       pgtype.UUID
 	Username string
 }
 
 func (q *Queries) GetAuthToken(ctx context.Context, arg GetAuthTokenParams) (Auth, error) {
-	row := q.db.QueryRowContext(ctx, getAuthToken, arg.ID, arg.Username)
+	row := q.db.QueryRow(ctx, getAuthToken, arg.ID, arg.Username)
 	var i Auth
 	err := row.Scan(
 		&i.ID,
@@ -117,18 +123,18 @@ func (q *Queries) GetAuthToken(ctx context.Context, arg GetAuthTokenParams) (Aut
 const getUser = `-- name: GetUser :one
 SELECT id, username, password, createdat, updatedat
 FROM Users
-WHERE id = ?
-    OR username = ?
+WHERE id = $1
+    OR username = $2
 LIMIT 1
 `
 
 type GetUserParams struct {
-	ID       string
+	ID       pgtype.UUID
 	Username string
 }
 
 func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, arg.ID, arg.Username)
+	row := q.db.QueryRow(ctx, getUser, arg.ID, arg.Username)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -147,7 +153,7 @@ ORDER BY username
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, getUsers)
+	rows, err := q.db.Query(ctx, getUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -166,9 +172,6 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -177,22 +180,22 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 
 const updateUser = `-- name: UpdateUser :exec
 UPDATE Users
-SET username = ?,
-    password = ?,
+SET username = $1,
+    password = $2,
     updatedAt = CURRENT_TIMESTAMP
-WHERE id = ?
-    OR username = ?
+WHERE id = $3
+    OR username = $4
 `
 
 type UpdateUserParams struct {
 	Username   string
 	Password   string
-	ID         string
+	ID         pgtype.UUID
 	Username_2 string
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
-	_, err := q.db.ExecContext(ctx, updateUser,
+	_, err := q.db.Exec(ctx, updateUser,
 		arg.Username,
 		arg.Password,
 		arg.ID,
