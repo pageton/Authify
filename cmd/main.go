@@ -11,7 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pageton/authify/config"
-	db "github.com/pageton/authify/db/model"
+	sqliteDB "github.com/pageton/authify/db/model/SQLite"
 	"github.com/pageton/authify/handler"
 	"github.com/pageton/authify/middleware"
 )
@@ -57,7 +57,7 @@ func main() {
 
 	defer database.Close()
 
-	queries := db.New(database)
+	queries := sqliteDB.New(database)
 
 	app.Post("/register", func(c *fiber.Ctx) error {
 		return handler.RegisterUser(c, queries)
