@@ -1,14 +1,16 @@
 BINARY_NAME := authfiy
 MAIN_FILE := cmd/main.go
 MIGRATION_FILE := db/migrations/db_migrations/setup.go
-SQLC_CONFIG := db/migrations/sqlc.yaml
+SQLC_CONFIG_SQLITE := db/migrations/SQLite/sqlc.yaml
+SQLC_CONFIG_POSTGRESQL := db/migrations/PostgreSQL/sqlc.yaml
 DOCKER_IMAGE := authfiy-app
 DOCKER_CONTAINER := authfiy-container
 DB_CONTAINER := authfiy-db
 PORT := $(shell grep ^PORT= .env | cut -d ':' -f2)
+DATABASE_ENGINE := $(shell grep ^DATABASE_ENGINE= .env | cut -d '=' -f2)
 NETWORK := host
 
-.PHONY: run migrate build clean rebuild db-up all help docker-build docker-run docker-clean docker-restart docker-compose-up
+.PHONY: run migrate build clean rebuild db-up all help docker-build docker-run docker-clean docker-restart docker-compose-up sqlc-generate docker-compose-down docker-remove-image docker-logs docker-compose-logs docker-stop docker-compose-stop docker-remove-images docker-restart
 
 run: ## Run the project
 	go run $(MAIN_FILE)
@@ -18,7 +20,15 @@ migrate db-up: ## Run database migrations
 	go run $(MIGRATION_FILE)
 
 sqlc-generate: ## Generate Go code from SQL queries using sqlc
-	sqlc generate -f $(SQLC_CONFIG)
+ifeq ($(DATABASE_ENGINE), sqlite)
+	@echo "Generating code for SQLite..."
+	sqlc generate -f $(SQLC_CONFIG_SQLITE)
+else ifeq ($(DATABASE_ENGINE), postgresql)
+	@echo "Generating code for PostgreSQL..."
+	sqlc generate -f $(SQLC_CONFIG_POSTGRESQL)
+endif
+
+
 
 build: ## Build the project (compile)
 	go build -o $(BINARY_NAME) $(MAIN_FILE)
