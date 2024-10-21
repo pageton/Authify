@@ -7,13 +7,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	db "github.com/pageton/authify/db/model"
+	sqliteDB "github.com/pageton/authify/db/model/SQLite"
 	"github.com/pageton/authify/models"
 	"github.com/pageton/authify/services"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func LoginUser(c *fiber.Ctx, queries *db.Queries) error {
+func LoginUser(c *fiber.Ctx, queries *sqliteDB.Queries) error {
 	var user models.UserModel
 
 	if err := c.BodyParser(&user); err != nil {
@@ -23,7 +23,7 @@ func LoginUser(c *fiber.Ctx, queries *db.Queries) error {
 	user.Username = strings.TrimSpace(user.Username)
 	user.Password = strings.TrimSpace(user.Password)
 
-	userDB, err := queries.GetUser(c.Context(), db.GetUserParams{
+	userDB, err := queries.GetUser(c.Context(), sqliteDB.GetUserParams{
 		Username: strings.ToLower(user.Username),
 	})
 	if err != nil {
@@ -44,7 +44,7 @@ func LoginUser(c *fiber.Ctx, queries *db.Queries) error {
 	userAgent := c.Get("User-Agent")
 
 	authID := uuid.New().String()
-	authTokenParams := db.CreateAuthTokenParams{
+	authTokenParams := sqliteDB.CreateAuthTokenParams{
 		ID:        authID,
 		Userid:    userDB.ID,
 		Token:     token,
