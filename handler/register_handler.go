@@ -6,12 +6,12 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	db "github.com/pageton/authify/db/model"
+	sqliteDB "github.com/pageton/authify/db/model/SQLite"
 	"github.com/pageton/authify/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func RegisterUser(c *fiber.Ctx, queries *db.Queries) error {
+func RegisterUser(c *fiber.Ctx, queries *sqliteDB.Queries) error {
 	var user models.UserModel
 	if err := c.BodyParser(&user); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"ok": false, "error": "invalid input"})
@@ -21,7 +21,7 @@ func RegisterUser(c *fiber.Ctx, queries *db.Queries) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"ok": false, "error": err.Error()})
 	}
 
-	existingUser, err := queries.GetUser(c.Context(), db.GetUserParams{
+	existingUser, err := queries.GetUser(c.Context(), sqliteDB.GetUserParams{
 		Username: strings.ToLower(user.Username),
 	})
 
@@ -37,7 +37,7 @@ func RegisterUser(c *fiber.Ctx, queries *db.Queries) error {
 
 	userID := uuid.New().String()
 
-	_, err = queries.CreateUser(c.Context(), db.CreateUserParams{
+	_, err = queries.CreateUser(c.Context(), sqliteDB.CreateUserParams{
 		ID:       userID,
 		Username: strings.ToLower(user.Username),
 		Password: string(hashedPassword),
