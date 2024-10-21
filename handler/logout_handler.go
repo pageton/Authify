@@ -4,10 +4,10 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
-	db "github.com/pageton/authify/db/model"
+	sqliteDB "github.com/pageton/authify/db/model/SQLite"
 )
 
-func LogOutUser(c *fiber.Ctx, queries *db.Queries) error {
+func LogOutUser(c *fiber.Ctx, queries *sqliteDB.Queries) error {
 	userID := c.FormValue("user_id")
 
 	if userID == "" {
