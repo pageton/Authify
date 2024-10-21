@@ -5,5 +5,5 @@ sql:
     queries: "queries.sql"
     gen:
       go:
-        package: "db"
-        out: "../model"
+        package: "sqliteDB"
+        out: "../../model/SQLite"
